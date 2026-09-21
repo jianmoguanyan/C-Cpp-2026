@@ -46,23 +46,15 @@ int main(void)
 	{
 		box3[e] = number % box2[e];
 		if (box3[e] != 0)
-		{
-			real = real + 1;
-		}
+		{real = real + 1;}
 		else
-		{
-			real = real + 0;
-		}
+		{real = real + 0;}
 	}
 
 	if (real == 0)
-	{
-		printf("%d is a prime number.", number);
-	}
+	{printf("%d is a prime number.", number);}
 	else if(real!=0)
-	{
-		printf("%d is not a prime number.", number);
-	}
+	{printf("%d is not a prime number.", number);}
 	
 	return 0;
 }
