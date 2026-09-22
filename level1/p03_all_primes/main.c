@@ -1,10 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 int main(void)
-{  
-   printf("all the prime number from 2 to 1000：");
+{  clock_t start,end;
+   printf("all the prime number from 2 to 1000：\n");
+   start=clock();
    for(int number=2;number<1001;number++)
    {
     int count = 0;
@@ -29,9 +31,15 @@ int main(void)
         }
 
         if (right == 0)
-        { printf("%d ", number);}
+        {
+            printf("%d ", number);
+        }
     }
     
    }
+   end=clock();
+   double alltime=(double)(end-start)/CLOCKS_PER_SEC;
+   printf("\nThe count comsume %.6f seconds",alltime);
     return 0;
 }
+//VS C环境
