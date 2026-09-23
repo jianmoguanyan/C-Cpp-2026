@@ -38,4 +38,3 @@ int main() {
 	printf("over");
 	return 0;
 }
-    // 使用Visual Studio C语言环境完成作业  //
