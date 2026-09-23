@@ -5,8 +5,7 @@ int times = 0;
 int k= 0;
 int i;
 
-int main()
-{
+int main() {
 	while (times <= 30)
 	{
 		for (int i = 0; i<= times;i++)		
@@ -38,4 +37,5 @@ int main()
 
 	printf("over");
 	return 0;
+}
     // 使用Visual Studio C语言环境完成作业  //

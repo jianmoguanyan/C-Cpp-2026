@@ -39,7 +39,7 @@ int main(void)
    }
    end=clock();
    double alltime=(double)(end-start)/CLOCKS_PER_SEC;
-   printf("\nThe count comsume %.6f seconds",alltime);
+   printf("\nThe count consume %.6f seconds",alltime);
     return 0;
 }
 //VS C环境
