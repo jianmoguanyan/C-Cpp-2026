@@ -16,7 +16,9 @@ int main(void)
         printf("2 ");
     }
     else if (number % 2 == 0)
-    {continue;}
+    {
+        continue;
+    }
     //到此已排除2、偶数两种特殊情况
     else
     {   int right=0;
@@ -37,9 +39,9 @@ int main(void)
     }
     
    }
-   end=clock();
-   double alltime=(double)(end-start)/CLOCKS_PER_SEC;
-   printf("\nThe count consume %.6f seconds",alltime);
+    end=clock();
+    double alltime=(double)(end-start)/CLOCKS_PER_SEC;
+    printf("\nThe count consume %.6f seconds",alltime);
     return 0;
 }
 //VS C环境
