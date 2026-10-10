@@ -151,3 +151,5 @@ void drawmap()
         printf("%s\n", map[i]);
     }
 }
+
+//VS C环境
