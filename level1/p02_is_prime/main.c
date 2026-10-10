@@ -6,9 +6,14 @@ int main(void)
 {
     int number;
     printf("Input A Positive Integer :");
-    scanf("%d", &number);
 
-    if (number == 1)
+    if (scanf("%d", &number) != 1)
+    {
+        printf("输入错误！请输入正整数。\n");
+        return 1;
+    }
+
+    if (number < 2)
     {
         printf("%d is not a prime number.", number);
     }
@@ -20,7 +25,6 @@ int main(void)
     {
         printf("%d is not a prime number.", number);
     }
-    //到此已排除1、2、偶数三种特殊情况
     else
     {
         int right = 0;

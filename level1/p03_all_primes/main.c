@@ -3,45 +3,46 @@
 #include <math.h>
 #include <time.h>
 
-int main(void)
-{  clock_t start,end;
-   printf("all the prime number from 2 to 1000：\n");
-   start=clock();
-   for(int number=2;number<1001;number++)
-   {
-    int count = 0;
-
-    if (number == 2) 
+int isPrime(int num)
+{
+    if(num < 2)
+        return 0;
+    if(num == 2)
+        return 1;
+    if(num % 2 == 0)
+        return 0;
+    // 只遍历奇数，循环到平方根，优化效率
+    int sqrt_num = sqrt(num);
+    for(int k = 3; k <= sqrt_num; k += 2)
     {
-        printf("2 ");
-    }
-    else if (number % 2 == 0)
-    {
-        continue;
-    }
-    //到此已排除2、偶数两种特殊情况
-    else
-    {   int right=0;
-        count = sqrt(number);
-        for(int k=3;k<=count;k=k+2)
-        { 
-            if(number%k==0)
-            {
-                right++;
-                break;
-            }
+        if(num % k == 0)
+        {
+            return 0;
         }
+    }
+    return 1;
+}
 
-        if (right == 0)
+int main(void)
+{
+    clock_t start, end;
+    printf("all the prime number from 2 to 1000：\n");
+
+    start = clock();
+
+    for(int number = 2; number <= 1000; number++)
+    {
+        if(isPrime(number))
         {
             printf("%d ", number);
         }
     }
-    
-   }
-    end=clock();
-    double alltime=(double)(end-start)/CLOCKS_PER_SEC;
-    printf("\nThe count consume %.6f seconds",alltime);
+
+    end = clock();
+    double alltime = (double)(end - start) / CLOCKS_PER_SEC;
+    printf("\nThe count consume %.6f seconds", alltime);
+
     return 0;
 }
+
 //VS C环境
