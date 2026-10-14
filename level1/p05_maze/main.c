@@ -29,14 +29,22 @@ int nx = 1;   // nx：玩家所在列
 int ny = 1;   // ny：玩家所在行
 int px = 1;   // px：移动前列坐标
 int py = 1;   // py：移动前行坐标
-char move;
+int move;
 
 int main()
 {
     while (1)
     {
         drawmap();
-        move = _getch();
+        int ch = _getch();
+        if (ch == 0 || ch == 224)
+        {
+            move = _getch();
+        }
+        else
+        {
+            move = 0;
+        }
 
         // 保存移动前坐标
         px = nx;
@@ -46,7 +54,7 @@ int main()
         // 先预判目标坐标，增加边界范围判断
         switch (move)
         {
-        case 'w':
+        case (72):
             // 向上，行-1，必须 ny>0 才允许尝试移动
             if (ny > 0)
             {
@@ -63,7 +71,7 @@ int main()
                 isMoveOk = 0;
             }
             break;
-        case 'a':
+        case 75:
             // 向左，列-1，nx>0
             if (nx > 0)
             {
@@ -79,7 +87,7 @@ int main()
                 isMoveOk = 0;
             }
             break;
-        case 's':
+        case 80:
             // 向下，行+1，ny < MAP_ROW-1
             if (ny < MAP_ROW - 1)
             {
@@ -95,7 +103,7 @@ int main()
                 isMoveOk = 0;
             }
             break;
-        case 'd':
+        case 77:
             // 向右，列+1，nx < MAP_COL -1
             if (nx < MAP_COL - 1)
             {
@@ -145,11 +153,9 @@ end:
 void drawmap()
 {
     system("cls");
-    printf("【操作说明】w上  s下  a左  d右\n");
     for (int i = 0;i < MAP_ROW;i++)
     {
         printf("%s\n", map[i]);
     }
 }
-
 //VS C环境
