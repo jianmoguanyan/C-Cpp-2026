@@ -12,7 +12,7 @@
 #define MAP_FILE "map.txt"
 #define SCORE_FILE "scores.txt"
 
-// map element
+// 地图元素定义
 #define WALL '#'
 #define SPACE ' '
 #define TARGET 'T'
@@ -21,7 +21,7 @@
 #define PLAYER 'a'
 #define PLAYER_ON_TARGET 'A'
 
-// arrow key prefix in win32 console
+// Win32控制台方向键按键码
 #define KEY_ESC 27
 #define KEY_UP 72
 #define KEY_DOWN 80
@@ -29,20 +29,18 @@
 #define KEY_RIGHT 77
 
 char levels_maps[MAX_LEVELS][MAX_ROW][MAX_COL];
-int level_row_cnt[MAX_LEVELS];
-int level_col_cnt[MAX_LEVELS];
+int level_row_cnt[MAX_LEVELS];  // 保存每一关的行数
 char current_map[MAX_ROW][MAX_COL];
 int total_levels = 0;
 int current_level = 0;
 int map_rows = 0;
-int map_cols = 0;
 int player_x = 0, player_y = 0;
 int steps = 0;
 int total_targets = 0;
 int total_boxes = 0;
 
 void load_levels();
-void load_current_level();
+int load_current_level();
 void draw_map();
 int try_move(int dx, int dy);
 int check_win();
@@ -64,14 +62,12 @@ int main()
 
     for (current_level = 0; current_level < total_levels; current_level++)
     {
-        load_current_level();
-
-        if (total_boxes != total_targets)
+        // 地图校验失败的关卡直接跳过
+        if (!load_current_level())
         {
-            printf("[WARN] Level %d: Boxes (%d) and Targets (%d) count mismatch!\n",
-                current_level + 1, total_boxes, total_targets);
             printf("Press any key to continue...\n");
             _getch();
+            continue;
         }
 
         int win = 0;
@@ -125,14 +121,14 @@ int main()
     return 0;
 }
 
-// set console code page and window title
+// 设置控制台编码与窗口标题
 void init_console()
 {
     system("chcp 65001 > nul");
     system("title Push Box Game");
 }
 
-// read all levels from map file
+// 从地图文件读取全部关卡
 void load_levels()
 {
     FILE* fp = fopen(MAP_FILE, "r");
@@ -152,6 +148,12 @@ void load_levels()
         char name[50];
         if (sscanf(line, "%d %d %49s", &rows, &cols, name) == 3)
         {
+            // 达到关卡上限，不再读取后续关卡，防止数组越界
+            if (total_levels >= MAX_LEVELS)
+            {
+                printf("[WARN] Reached the maximum level limit (%d). Extra levels ignored.\n", MAX_LEVELS);
+                break;
+            }
             if (rows >= MAX_ROW || cols >= MAX_COL || rows <= 0 || cols <= 0)
             {
                 printf("[WARN] Level %d size exceeds limits. Skipping.\n", total_levels + 1);
@@ -167,23 +169,16 @@ void load_levels()
                     break;
                 }
                 levels_maps[total_levels][i][strcspn(levels_maps[total_levels][i], "\r\n")] = '\0';
-                int l = (int)strlen(levels_maps[total_levels][i]);
-                if (l > cols)
+
+                if ((int)strlen(levels_maps[total_levels][i]) > cols)
                 {
                     valid = 0;
                 }
-                // fill space to fixed cols
-                for (int p = l; p < cols; p++)
-                {
-                    levels_maps[total_levels][i][p] = ' ';
-                }
-                levels_maps[total_levels][i][cols] = '\0';
             }
 
             if (valid)
             {
-                level_row_cnt[total_levels] = rows;
-                level_col_cnt[total_levels] = cols;
+                level_row_cnt[total_levels] = rows; // 记录当前关卡行数
                 total_levels++;
             }
             else
@@ -196,15 +191,18 @@ void load_levels()
     fclose(fp);
 }
 
-// copy selected level into runtime map, reset status
-void load_current_level()
+// 加载选中关卡到运行地图，重置游戏状态
+// 返回1代表关卡合法，返回0代表需要跳过该关卡
+int load_current_level()
 {
     steps = 0;
     total_targets = 0;
     total_boxes = 0;
-    map_rows = level_row_cnt[current_level];
-    map_cols = level_col_cnt[current_level];
+    map_rows = level_row_cnt[current_level]; // 使用保存好的关卡行数
 
+    memset(current_map, 0, sizeof(current_map)); // 清空上一关残留数据
+
+    int player_count = 0;
     for (int i = 0; i < map_rows; i++)
     {
         strcpy(current_map[i], levels_maps[current_level][i]);
@@ -214,8 +212,9 @@ void load_current_level()
         {
             if (current_map[i][j] == PLAYER || current_map[i][j] == PLAYER_ON_TARGET)
             {
-                player_y = i;
                 player_x = j;
+                player_y = i;
+                player_count++;
             }
             if (current_map[i][j] == TARGET || current_map[i][j] == BOX_ON_TARGET || current_map[i][j] == PLAYER_ON_TARGET)
             {
@@ -227,16 +226,31 @@ void load_current_level()
             }
         }
     }
+
+    // 地图校验：必须有且仅有一个玩家
+    if (player_count != 1)
+    {
+        printf("[ERROR] Level %d: Player count = %d (exactly 1 required).\n", current_level + 1, player_count);
+        return 0;
+    }
+    // 地图校验：箱子数量必须等于目标点数量，否则无法通关
+    if (total_boxes != total_targets || total_boxes == 0)
+    {
+        printf("[ERROR] Level %d: Boxes (%d) / Targets (%d) count mismatch.\n", current_level + 1, total_boxes, total_targets);
+        return 0;
+    }
+
+    return 1;
 }
 
-// render game map and HUD
+// 绘制游戏地图与界面信息
 void draw_map()
 {
     system("cls");
     printf("================ PUSH BOX ================\n");
-    printf(" Level: %d / %d  |  Steps: %d\n", current_level + 1, total_levels, steps);
+    printf(" Level: %d / %d | Steps: %d\n", current_level + 1, total_levels, steps);
     printf(" Controls: Arrow Keys to Move\n");
-    printf("           [R] Reset Level  |  [ESC] Quit\n");
+    printf(" [R] Reset Level | [ESC] Quit\n");
     printf(" Legend: '#' Wall, 'a' Player, 'B' Box, 'T' Target, 'b' Box on Target\n");
     printf("==========================================\n\n");
     for (int i = 0; i < map_rows; i++)
@@ -245,8 +259,8 @@ void draw_map()
     }
 }
 
-// try move player, dx horizontal, dy vertical
-// return 1 if moved successfully, else 0
+// 尝试移动玩家，dx横向偏移，dy纵向偏移
+// 移动成功返回1，失败返回0
 int try_move(int dx, int dy)
 {
     int next_x = player_x + dx;
@@ -254,7 +268,7 @@ int try_move(int dx, int dy)
 
     if (next_y < 0 || next_y >= map_rows)
         return 0;
-    int row_len = map_cols;
+    int row_len = (int)strlen(current_map[next_y]);
     if (next_x < 0 || next_x >= row_len)
         return 0;
 
@@ -262,7 +276,7 @@ int try_move(int dx, int dy)
     if (next_cell == WALL || next_cell == '\0')
         return 0;
 
-    // push box
+    // 遇到箱子，执行推箱子逻辑
     if (next_cell == BOX || next_cell == BOX_ON_TARGET)
     {
         int next_box_x = next_x + dx;
@@ -270,7 +284,7 @@ int try_move(int dx, int dy)
 
         if (next_box_y < 0 || next_box_y >= map_rows)
             return 0;
-        int box_row_len = map_cols;
+        int box_row_len = (int)strlen(current_map[next_box_y]);
         if (next_box_x < 0 || next_box_x >= box_row_len)
             return 0;
 
@@ -280,11 +294,11 @@ int try_move(int dx, int dy)
             return 0;
         }
 
-        // leave old position
+        // 玩家离开原来的位置
         current_map[player_y][player_x] = (current_map[player_y][player_x] == PLAYER_ON_TARGET) ? TARGET : SPACE;
-        // move player to box old pos
+        // 玩家移动到箱子原来的位置
         current_map[next_y][next_x] = (next_cell == BOX_ON_TARGET) ? PLAYER_ON_TARGET : PLAYER;
-        // move box
+        // 箱子移动到下一格
         current_map[next_box_y][next_box_x] = (box_next_cell == TARGET) ? BOX_ON_TARGET : BOX;
 
         player_x = next_x;
@@ -292,7 +306,7 @@ int try_move(int dx, int dy)
         return 1;
     }
 
-    // normal move to empty space or target
+    // 普通移动：走到空地或者目标点
     if (next_cell == SPACE || next_cell == TARGET)
     {
         current_map[player_y][player_x] = (current_map[player_y][player_x] == PLAYER_ON_TARGET) ? TARGET : SPACE;
@@ -305,13 +319,13 @@ int try_move(int dx, int dy)
     return 0;
 }
 
-// win check: all boxes are on target
+// 判断游戏是否胜利：所有箱子都放在目标点上
 int check_win()
 {
     int boxes_on_target = 0;
     for (int i = 0; i < map_rows; i++)
     {
-        int len = map_cols;
+        int len = (int)strlen(current_map[i]);
         for (int j = 0; j < len; j++)
         {
             if (current_map[i][j] == BOX_ON_TARGET)
@@ -323,7 +337,7 @@ int check_win()
     return (boxes_on_target == total_boxes && total_boxes > 0);
 }
 
-// append score record to file
+// 将当前关卡成绩追加写入分数文件
 void save_score()
 {
     FILE* fp = fopen(SCORE_FILE, "a");
